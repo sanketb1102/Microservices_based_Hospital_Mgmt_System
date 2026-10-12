@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MediCore HMS</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <!--
+    A single HTML file for the whole application.
+
+    The browser loads this once. After that the router swaps what is inside
+    #app when the URL changes, without ever asking the server for another
+    page. Nginx is configured to return this same file for any unknown path,
+    which is what makes a deep link or a refresh on /patients still work.
+  -->
+  <div id="app"></div>
+
+  <!-- shared helpers -->
+  <script src="/js/auth.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/layout.js"></script>
+  <script src="/js/router.js"></script>
+
+  <!-- one file per page -->
+  <script src="/js/pages/login.js"></script>
+  <script src="/js/pages/signup.js"></script>
+  <script src="/js/pages/setpassword.js"></script>
+  <script src="/js/pages/dashboard.js"></script>
+  <script src="/js/pages/patients.js"></script>
+  <script src="/js/pages/doctors.js"></script>
+  <script src="/js/pages/appointments.js"></script>
+  <script src="/js/pages/billing.js"></script>
+
+  <!-- route table, then start -->
+  <script src="/js/app.js"></script>
+</body>
+</html>
