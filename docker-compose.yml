@@ -1,0 +1,96 @@
+# MediCore HMS -- one command brings up all 8 containers:
+#   docker compose up --build
+#
+# Every value that is secret or machine-specific lives in .env, which is
+# never committed. Copy .env.example to .env to get started.
+
+services:
+  auth-service:
+    build: ./auth-service
+    container_name: medicore-auth
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      MONGO_URI: ${MONGO_URI}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1h}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+
+  patient-service:
+    build: ./patient-service
+    container_name: medicore-patients
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: 3002
+      MONGO_URI: ${MONGO_URI}
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - redis
+
+  doctor-service:
+    build: ./doctor-service
+    container_name: medicore-doctors
+    ports:
+      - "3003:3003"
+    environment:
+      PORT: 3003
+      MONGO_URI: ${MONGO_URI}
+      JWT_SECRET: ${JWT_SECRET}
+
+  appointment-service:
+    build: ./appointment-service
+    container_name: medicore-appointments
+    ports:
+      - "3004:3004"
+    environment:
+      PORT: 3004
+      MONGO_URI: ${MONGO_URI}
+      JWT_SECRET: ${JWT_SECRET}
+      PATIENT_SERVICE_URL: http://patient-service:3002
+      DOCTOR_SERVICE_URL: http://doctor-service:3003
+    depends_on:
+      - patient-service
+      - doctor-service
+
+  billing-service:
+    build: ./billing-service
+    container_name: medicore-billing
+    ports:
+      - "3005:3005"
+    environment:
+      PORT: 3005
+      MONGO_URI: ${MONGO_URI}
+      JWT_SECRET: ${JWT_SECRET}
+
+  mongo:
+    image: mongo
+    container_name: medicore-mongo
+    ports:
+      - "27018:27017"
+
+  redis:
+    image: redis
+    container_name: medicore-redis
+    ports:
+      - "6379:6379"
+
+  api-gateway:
+    image: nginx
+    container_name: medicore-gateway
+    ports:
+      - "80:80"
+    volumes:
+      - ./api-gateway/nginx.conf:/etc/nginx/nginx.conf
+      - ./api-gateway/proxy_headers.conf:/etc/nginx/proxy_headers.conf
+      - ./frontend:/usr/share/nginx/html
+    depends_on:      # controls startup order only -- it waits for the
+      - auth-service #  container to start, not for the app inside to be ready
+      - patient-service
+      - doctor-service
+      - appointment-service
+      - billing-service
